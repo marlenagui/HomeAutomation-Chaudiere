@@ -1,0 +1,1 @@
+select from_unixtime(date), severity, text from log where from_unixtime(date) LIKE '2021-10-25%' and text like '%chaudiere%';
