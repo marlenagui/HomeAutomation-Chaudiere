@@ -770,20 +770,20 @@ def main():
 		# Onlit les consignes horaires
 		consignesHoraires()
 		localtime = time.localtime(time.time())
-		# glob.heureMaintenant = localtime.tm_hour * 3600 + localtime.tm_min * 60
-		# # On verifie si heureMaintenant < consignes horaires basse
-		# while glob.heureMaintenant < glob.heureDebut or glob.heureMaintenant > glob.heureFin:
-		# 	if glob.heureMaintenant < glob.heureDebut:
-		# 		logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " il est trop tot pour chauffer :) --on attent : " + str(glob.horairesConfig['sleep_horaires'])
-		# 		log(name, verbose, severity, logText)
-		# 	else:
-		# 		logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " il est trop tard pour chauffer :) --on attent : " + str(glob.horairesConfig['sleep_horaires'])
-		# 		log(name, verbose, severity, logText)
+		glob.heureMaintenant = localtime.tm_hour * 3600 + localtime.tm_min * 60
+		# On verifie si heureMaintenant < consignes horaires basse
+		while glob.heureMaintenant < glob.heureDebut or glob.heureMaintenant > glob.heureFin:
+			if glob.heureMaintenant < glob.heureDebut:
+				logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " il est trop tot pour chauffer :) --on attent : " + str(glob.horairesConfig['sleep_horaires'])
+				log(name, verbose, severity, logText)
+			else:
+				logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " il est trop tard pour chauffer :) --on attent : " + str(glob.horairesConfig['sleep_horaires'])
+				log(name, verbose, severity, logText)
 
-		# 	time.sleep(int(glob.horairesConfig['sleep_horaires']))
-		# 	# On actualise l'heure
-		# 	localtime = time.localtime(time.time())
-		# 	glob.heureMaintenant = localtime.tm_hour * 3600 + localtime.tm_min * 60
+			time.sleep(int(glob.horairesConfig['sleep_horaires']))
+			# On actualise l'heure
+			localtime = time.localtime(time.time())
+			glob.heureMaintenant = localtime.tm_hour * 3600 + localtime.tm_min * 60
 
 
 		logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " Il est l'heure de demarrer la chaudiere :( "
