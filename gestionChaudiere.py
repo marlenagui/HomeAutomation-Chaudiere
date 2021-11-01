@@ -3,10 +3,12 @@ from w1thermsensor import W1ThermSensor
 import datetime
 import time
 import threading
+import paho.mqtt.client as mqtt 
 from urllib import request, parse
 from configParser import read_config
 from log import *
 from w1thermsensor import W1ThermSensor
+
 #from nap.url import Url
 
 ################################################################################################################################
@@ -20,7 +22,7 @@ class glob(object):
 	configFile = 'config.ini'
 	#define the sections of the config file
 	mainConfig = {}
-	arestioConfig = {}
+	mqttConfig = {}
 	horairesConfig = {}
 	logDBConfig = {}
 	consignesConfig = {}
@@ -126,33 +128,6 @@ class myThreadReadSensors(threading.Thread):
 			glob.tempDepartEauViessman = sensor
 			##insertIOTDataSqlite3(3, int(time.time()), str(glob.tempDepartEauViessman))
 			insertIOTDataMysql(3, int(time.time()), str(glob.tempDepartEauViessman))
-			#insertIOTDataMysql(glob.logDBConfig, 3, int(time.time()), str(glob.tempDepartEauViessman))
-			# Read temp_depart_eau_10kresistor
-			# sensor = arestio(glob.urlApi, glob.analogIOConfig['temp_depart_eau_10kresistor'])
-			# if sensor == False:
-			# 	log(self.name, self.verbose, self.severity, ":: ERROR :: Cannot read temp_depart_eau_10kresistor")
-			# 	myThreadReadSensors.stop(self)
-			# glob.tempDepartEau = sensor['temperatureEXT']
-			# # Read temp_dth11
-			# sensor =  arestio(glob.urlApi, glob.analogIOConfig['temp_dth11'] )
-			# if sensor == False:
-			# 	log(self.name, self.verbose, self.severity, ":: ERROR :: Cannot read temp_dth11")
-			# 	myThreadReadSensors.stop(self)
-			# glob.tempChaufferie = sensor['temperature']
-			# # Read humidite_dht11
-			# sensor = arestio(glob.urlApi, glob.analogIOConfig['humidite_dht11'])
-			# if sensor == False:
-			# 	log(self.name, self.verbose, self.severity, ":: ERROR :: Cannot read humidite_dht11")
-			# 	myThreadReadSensors.stop(self)
-			# glob.humiditeChaufferie = sensor['humidity']
-			# # Read temp_ext_viessmann
-			# #set manually right now no external temperature sensor connected
-			# glob.tempextviessmann = int(glob.analogIOConfig['temp_ext_viessmann'])
-			# #urlPath = 'analog/' +  glob.analogIOConfig['temp_ext_viessmann']
-			# #glob.tempextviessmann = arestio(glob.urlApi, urlPath )
-			# if glob.tempextviessmann == False:
-			# 	log(self.name, self.verbose, self.severity, ":: ERROR :: Cannot read temp_ext_viessmann")
-			# 	myThreadReadSensors.stop(self)
 			# # Wait until next reading
 			time.sleep(int(glob.consignesConfig['sleep_between_sensor_reading']))
 
@@ -324,117 +299,6 @@ class myThreadCirculateur(threading.Thread):
 		demarrageCirculateur = commandeRelais(glob.relaisCirculateur, 1)
 		self.running = False
 
-################################################################################################################################
-# CLASS myThreadGestionVanne
-################################################################################################################################
-# class myThreadVanne(threading.Thread):
-# 	"""Thread pour la gestion de la vanne"""
-# 	def __init__(self, name):
-# 		threading.Thread.__init__(self)
-# 		self.name = name
-# 		self.running = True
-# 		self.verbose = glob.verbose
-# 		self.severity = "INFO"
-
-# 	def run(self):
-# 		logtext = 'Thread ' +  self.name + ' started'
-# 		log(self.name, self.verbose, self.severity, logtext)
-# 		while self.running:
-# 			# on verifie si le ciculateur fonctionne
-# 			while myThreadCirculateur.is_alive(self):
-# 				# on mesure la temperature de sortie eau
-# 				urlPath = 'analog/' + glob.analogIOConfig['temp_depart_eau_viessman']
-# 				glob.tempDepartEauViessman = arestio(glob.urlApi, urlPath)['return_value']
-# 				#while int(glob.tempDepartEauViessman) > int(glob.consignesConfig['temp_depart_eau_bas'] and int(glob.tempDepartEauViessman) > int(glob.consignesConfig['temp_depart_eau_haut']:
-# 				#	log(self.name, self.verbose, self.severity, "la vanne est bien reglee, on attent 20 secondes")
-
-# 				# tant que la temperature sortie eau est superieure a la consigne on tourne vers le froid et on attend
-# 				while int(glob.tempDepartEauViessman) > int(glob.consignesConfig['temp_depart_eau_haut']):
-# 					logtext = "Temperature depart eau : " + str(glob.tempDepartEauViessman) + " superieur a la consigne : " + glob.consignesConfig['temp_depart_eau_haut']
-# 					log(self.name, self.verbose, self.severity, logtext)
-# 					# On verifie le sens de rotation de la vanne, on veut FROID
-# 					logtext = "On tourne la vanne vers le froid pendant : " + glob.consignesConfig['duree_rotation_vanne']
-# 					log(self.name, self.verbose, self.severity, logtext)
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne_chaudfroid'][1]
-# 					relais_vanne_chaudfroid = arestio(glob.urlApi, urlPath)['return_value']
-# 					if relais_vanne_chaudfroid != 1:
-# 						# On position the sens de rotation de la vanne sur FROID
-# 						urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne_chaudfroid'][1] + "/1"
-# 						relais_vanne_chaudfroid = arestio(glob.urlApi, urlPath)
-# 						if relais_vanne_chaudfroid == False:
-# 							log("ERROR", self.verbose, "Impossible de changer le sens de rotation de la vanne")
-# 							myThreadGestionVanne.stop()
-# 					# On alimente le moteur de la vanne
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne'][1] + "/0"
-# 					relaisVanne = arestio(glob.urlApi, urlPath)
-# 					if relaisVanne == False:
-# 						log("ERROR", self.verbose, "Impossible de demarrer le relais de vanne")
-# 						myThreadGestionVanne.stop()
-# 					# On attent de la duree de consigne de rotation de la vanne
-# 					time.sleep(int(glob.consignesConfig['duree_rotation_vanne']))
-# 					# On arrete le moteur de la vanne
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne'][1] + "/1"
-# 					relaisVanne = arestio(glob.urlApi, urlPath)
-# 					if relaisVanne == False:
-# 						log("ERROR", self.verbose, "Impossible d'arreter le relais de vanne")
-# 						myThreadGestionVanne.stop()
-# 					else:
-# 						log(self.name, self.verbose, self.severity, "Vanne tournee")
-# 					# on mesure la temperature apres 60 secondes
-# 					log(self.name, self.verbose, self.severity, "on attend 60 secondes avant de mesurer la temperature de depart eau")
-# 					time.sleep(60)
-# 					urlPath = 'analog/' + glob.analogIOConfig['temp_depart_eau_viessman']
-# 					glob.tempDepartEauViessman = arestio(glob.urlApi, urlPath)['return_value']
-
-# 				# cas ou la temp depart eau est inferieur a la consigne	basse on tourne la vanne vers le CHAUD
-# 				while int(glob.tempDepartEauViessman) < int(glob.consignesConfig['temp_depart_eau_bas']):
-# 					logtext = "Temperature depart eau : " + str(glob.tempDepartEauViessman) + " inferieur a la consigne : " + glob.consignesConfig['temp_depart_eau_haut']
-# 					log(self.name, self.verbose, self.severity, logtext)
-# 					logtext = "On tourne la vanne vers le chaud pendant : " + glob.consignesConfig['duree_rotation_vanne']
-# 					log(self.name, self.verbose, self.severity, logtext)
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne_chaudfroid'][1]
-# 					relais_vanne_chaudfroid = arestio(glob.urlApi, urlPath)['return_value']
-# 					if relais_vanne_chaudfroid != 0:
-# 						# On position the sens de rotation de la vanne sur CHAUD
-# 						urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne_chaudfroid'][1] + "/0"
-# 						relais_vanne_chaudfroid = arestio(glob.urlApi, urlPath)
-# 						if relais_vanne_chaudfroid == False:
-# 							log("ERROR", self.verbose, "Impossible de changer le sens de rotation de la vanne")
-# 							myThreadGestionVanne.stop()
-# 					# On alimente le moteur de la vanne
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne'][1] + "/0"
-# 					relaisVanne = arestio(glob.urlApi, urlPath)
-# 					if relaisVanne == False:
-# 						log("ERROR", self.verbose, "Impossible de demarrer le relais de vanne")
-# 						myThreadGestionVanne.stop()
-# 					# On attent de la duree de consigne de rotation de la vanne
-# 					time.sleep(int(glob.consignesConfig['duree_rotation_vanne']))
-# 					# On arrete le moteur de la vanne
-# 					urlPath = 'digital/' + glob.digitalIOConfig['relais_vanne'][1] + "/1"
-# 					relaisVanne = arestio(glob.urlApi, urlPath)
-# 					if relaisVanne == False:
-# 						log("ERROR", self.verbose, "Impossible d'arreter le relais de vanne")
-# 						myThreadGestionVanne.stop()
-# 					else:
-# 						log(self.name, self.verbose, self.severity, "Vanne tournee")
-# 					# on mesure la temperature apres 60 secondes
-# 					log(self.name, self.verbose, self.severity, "on attend 60 secondes avant de mesurer la temperature de depart eau")
-# 					time.sleep(60)
-# 					urlPath = 'analog/' + glob.analogIOConfig['temp_depart_eau_viessman']
-# 					glob.tempDepartEauViessman = arestio(glob.urlApi, urlPath)['return_value']
-# 					print(glob.tempDepartEauViessman)
-
-# 				# et finallement la temperature est bonne on attend.
-# 				logtext = "Temperature depart eau : " + str(glob.tempDepartEauViessman) + " est entre les consignes haute et basse :)"
-# 				log(self.name, self.verbose, self.severity, logtext)
-# 				log(self.name, self.verbose, self.severity, "on attend 60 secondes avant de mesurer la temperature de depart eau")
-# 				time.sleep(60)
-
-# 	def stop(self):
-# 		logtext = 'Thread ' +  self.name + ' is being stopped'
-# 		log(self.name, self.verbose, self.severity, logtext)
-# 		self.running = False
-
 
 
 ################################################################################################################################
@@ -492,10 +356,10 @@ def readConfigFile():
 	logtext = "mainConfig = " + str(glob.mainConfig)
 	log(name, verbose, severity, logtext)
 
-	# arestio
-	# glob.arestioConfig = read_config(glob.configFile, 'arestio')
-	# logtext = "arestioConfig = " + str(glob.arestioConfig)
-	# log(name, verbose, severity, logtext)
+	# mqtt
+	glob.mqttConfig = read_config(glob.configFile, 'mqtt')
+	logtext = "mqttConfig = " + str(glob.mqttConfig)
+	log(name, verbose, severity, logtext)
 
 	# Horaires
 	glob.horairesConfig = read_config(glob.configFile, 'horaires')
@@ -536,24 +400,6 @@ def initialisation():
 	name = "INIT       "
 	severity = "INFO"
 	# Initialistion, read configFile
-
-	# Build the arest.io base url
-	# glob.urlApi = 'http://' + glob.arestioConfig['api_url'] + ':' + glob.arestioConfig['api_url_port'] + '/'
-	# logtext = "Base arest.io url is : " + glob.urlApi
-	# log(name, verbose, severity, logtext)
-
-	# #Arduino Pin set mode output and at 0 (relais) HIGH for the pin
-	# for pin in glob.digitalIOConfig:
-	# 	urlPath = 'mode/' + glob.digitalIOConfig[pin][1] + "/" + glob.digitalIOConfig[pin][3]
-	# 	modeOutput = arestio(glob.urlApi, urlPath)
-	# 	if modeOutput == False:
-	# 		break
-	# 		#TODO
-	# 	urlPath = 'digital/' + glob.digitalIOConfig[pin][1] + "/" + glob.digitalIOConfig[pin][5]
-	# 	modeOutput = arestio(glob.urlApi, urlPath)
-	# 	if modeOutput == False:
-	# 		break
-	# 		#TODO clean stop
 	
 	wpi.wiringPiSetup()
 	# Chaudiere First
@@ -573,30 +419,6 @@ def initialisation():
 	wpi.pinMode(0, 1)
 	commandeRelais(0, 1)
 
-
-
-
-################################################################################################################################
-# Function arestio
-################################################################################################################################
-# def arestio(url, urlPath):
-# 	"""This funtion use the rest API arest.io loaded on the arduino board. to retrieve analog pin values or set digital pin to 0 or 1
-# 	"""
-# 	verbose = glob.verbose
-# 	name = "AREST      "
-# 	severity = "INFO"
-
-# 	api = Url(url)
-# 	try:
-# 		var = api.get(urlPath)
-# 		logText = str(var.json())
-# 		log(name, verbose, severity, logText)
-# 		time.sleep(0.5)
-# 		return var.json()
-# 	except Exception as e:
-# 		logtext = 'Cannot retreive: ' + url + urlPath + ' returning FALSE' + e
-# 		log("ERROR", verbose,e)
-# 		return False
 
 ################################################################################################################################
 # Function commandeRelais
