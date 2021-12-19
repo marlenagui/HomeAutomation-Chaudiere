@@ -167,12 +167,12 @@ class myThreadChaudiere(threading.Thread):
 		log(self.name, self.verbose, self.severity, logtext)
 		while self.running:
 			# Verifie si la temp ext est > a la consigne basse
-			while glob.tempextviessmann > int(glob.consignesConfig['temp_exterieur_basse']):
-				logtext = "il fait chaud dehors on attend :) " + glob.consignesConfig['sleep_temp_ext'] + " seconds"
-				log(self.name, self.verbose, self.severity, logtext)
-				time.sleep(glob.consignesConfig['sleep_temp_ext'])
+			# while glob.tempextviessmann > int(glob.consignesConfig['temp_exterieur_basse']):
+			# 	logtext = "il fait chaud dehors on attend :) " + glob.consignesConfig['sleep_temp_ext'] + " seconds"
+			# 	log(self.name, self.verbose, self.severity, logtext)
+			# 	time.sleep(glob.consignesConfig['sleep_temp_ext'])
+			# log(self.name, self.verbose, self.severity, "il caille dehors faut chauffer :( ")
 
-			log(self.name, self.verbose, self.severity, "il caille dehors faut chauffer :( ")
 			# verifie si la temp chaudiere est > a la consigne basse temperature chaudiere, si oui on attend
 			while glob.tempChaudiereViessman > int(glob.consignesConfig['temp_chaudiere_basse']):
 				logtext = "La chaudiere est chaude : " + str(glob.tempChaudiereViessman) + ", on attend :) " + glob.consignesConfig['sleep_chaudiere'] + " seconds"
@@ -181,12 +181,7 @@ class myThreadChaudiere(threading.Thread):
 
 			# Il fait froid et la chaudiere est froide on demarre :(
 			log(self.name, self.verbose, self.severity, "-- DEMARRAGE -- chaudiere :( ")
-			##insertIOTDataSqlite3(1, int(time.time()), 1)
 			insertIOTDataMysql(1, int(time.time()), 1)
-			#insertIOTDataMysql(glob.logDBConfig, 1, int(time.time()), 1)
-			# ancienne version avec arest.io
-			# urlPath = 'digital/' + glob.digitalIOConfig['relais_chaudiere'][1] + '/0'
-			# demarrageChaudiere = arestio(glob.urlApi, urlPath)
 			demarrageChaudiere = commandeRelais(glob.relaisChaudiere, 0)
 			if demarrageChaudiere == False:
 				log(self.name, self.verbose, self.severity, ":: ERROR :: Impossible de demarrer la chaudiere")
@@ -194,6 +189,7 @@ class myThreadChaudiere(threading.Thread):
 			# Envoie SMS si debug = True
 			if self.debug == True:
 				 sendSMS(glob.smsConfig['url'], glob.smsConfig['user'], glob.smsConfig['pass'], "--DEMARRAGE_Chaudiere")
+
 			# Verifie si la temp chaudiere est < a la consigne  haute temp chaudiere.
 			while glob.tempChaudiereViessman < int(glob.consignesConfig['temp_chaudiere_haute']):
 				logtext = "Temperature chaudiere : " + str(glob.tempChaudiereViessman) + " < a la temperature de consigne haute : " + str(glob.consignesConfig['temp_chaudiere_haute']) + ", on attend :( " + glob.consignesConfig['sleep_chaudiere'] + " seconds"
@@ -204,12 +200,7 @@ class myThreadChaudiere(threading.Thread):
 			logtext = "Temperature chaudiere : " + str(glob.tempChaudiereViessman) + " > a la temperature de consigne haute : " + str(glob.consignesConfig['temp_chaudiere_haute'])
 			log(self.name, self.verbose, self.severity, logtext)
 			log(self.name, self.verbose, self.severity, "-- ARRET -- chaudiere :) ")
-			##insertIOTDataSqlite3(1, int(time.time()), 0)
 			insertIOTDataMysql(1, int(time.time()), 0)
-			#insertIOTDataMysql(glob.logDBConfig, 1, int(time.time()), 0)
-			# ancienne version avec arest.io
-			# urlPath = 'digital/' + glob.digitalIOConfig['relais_chaudiere'][1] + '/1'
-			# arretChaudiere = arestio(glob.urlApi, urlPath)
 			arretChaudiere = commandeRelais(glob.relaisChaudiere, 1)
 			if arretChaudiere == False:
 				log(self.name, self.verbose, self.severity, ":: ERROR :: Impossible d arreter la chaudiere")
@@ -222,7 +213,6 @@ class myThreadChaudiere(threading.Thread):
 		self.running = False
 		#We stop the heating boiler in any case to be safe
 		log(self.name, self.verbose, self.severity, "On arrete la chaudiere :) ")
-		urlPath = 'digital/' + glob.digitalIOConfig['relais_chaudiere'][1] + '/1'
 		arretChaudiere = commandeRelais(glob.relaisChaudiere, 1)
 		if arretChaudiere == False:
 			log(self.name, self.verbose, self.severity, ":: ERROR :: Impossible d arreter la chaudiere")
@@ -246,12 +236,6 @@ class myThreadCirculateur(threading.Thread):
 		logtext = 'Thread ' +  self.name + ' started'
 		log(self.name, self.verbose, self.severity, logtext)
 		while self.running:
-			# # Verifie si la temp ext est > a la consigne basse
-			# while glob.tempextviessmann > int(glob.consignesConfig['temp_exterieur_basse']):
-			# 	logtext = "il fait chaud dehors on attend :) " + glob.consignesConfig['sleep_temp_ext'] + " seconds"
-			# 	log(self.name, self.verbose, self.severity, logtext)
-			# 	time.sleep(int(glob.consignesConfig['sleep_temp_ext']))
-			# log(self.name, self.verbose, self.severity, "il caille dehors faut chauffer :( ")
 
 			# # Verifie si la temperature eau < temp consigne basse circulateur, si c'est le cas on attend que l'eau chauffe avant de la faire circuler
 			# while glob.tempChaudiereViessman < int(glob.consignesConfig['temp_chaudiere_basse_circulateur']):
@@ -260,10 +244,7 @@ class myThreadCirculateur(threading.Thread):
 			# 	time.sleep(int(glob.consignesConfig['sleep_temp_ext']))
 
 			# On demarre le circulateur
-			# #insertIOTDataSqlite3(2, int(time.time()), 1)
 			insertIOTDataMysql(2, int(time.time()), 1)
-			#insertIOTDataMysql(glob.logDBConfig, 2, int(time.time()), 1)
-			#urlPath = 'digital/' + glob.digitalIOConfig['relais_circulateur'][1] + '/0'
 			if glob.relaisCirculateurIsOn: 
 				log(self.name,self.verbose, self.severity, "Le circulateur est deja demarrer")
 			else:
@@ -296,6 +277,7 @@ class myThreadCirculateur(threading.Thread):
 	def stop(self):
 		logtext = 'Thread ' +  self.name + ' is being stopped'
 		log(self.name, self.verbose, self.severity, logtext)
+		insertIOTDataMysql(2, int(time.time()), 0)
 		demarrageCirculateur = commandeRelais(glob.relaisCirculateur, 1)
 		self.running = False
 
@@ -630,11 +612,23 @@ def main():
 
 		logText = str(localtime.tm_hour) + "h" + str(localtime.tm_min) + " Il est l'heure d'arreter la chaudiere :)"
 		log(name, verbose, severity, logText)
-		# lOn appel la fonction stop de la thread Chaudiere, cela arretera la chaudiere a la fin de son prochain cycle
+		# On appel la fonction stop de la thread Chaudiere, cela arretera la chaudiere a la fin de son prochain cycle
 		ThreadChaudiere.stop()
 		#ThreadVanne.stop()
 		ThreadConsignes.stop()
-		ThreadCirculateur.is_alive()
+		# Checking if the circulateur Thread is alive
+		if (ThreadCirculateur.is_alive()):
+			# check if the tempchaudiere is > temp chaudier basse, if yes then keep the circulateur on, else stop
+			while glob.tempChaudiereViessman > int(glob.consignesConfig['temp_chaudiere_basse'])+20:
+				logtext = "La chaudiere est chaude : " + str(glob.tempChaudiereViessman) + ", on attend :) " + glob.consignesConfig['sleep_chaudiere'] + " seconds"
+				log(self.name, self.verbose, self.severity, logtext)
+				time.sleep(int(glob.consignesConfig['sleep_chaudiere']))
+			# stop the circulateur
+			log(self.name, self.verbose, self.severity, "Arret du circulateur")
+			insertIOTDataMysql(2, int(time.time()), 0)
+			ThreadCirculateur.stop()
+
+
 		# On attend un cycle d'attente sinon on va rester dans le meme cycle et le premier while va etre sauter
 		time.sleep(int(glob.horairesConfig['sleep_horaires']))
 
