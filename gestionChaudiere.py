@@ -615,12 +615,12 @@ def main():
 		# On appel la fonction stop de la thread Chaudiere, cela arretera la chaudiere a la fin de son prochain cycle
 		ThreadChaudiere.stop()
 		#ThreadVanne.stop()
-		ThreadConsignes.stop()
+		#ThreadConsignes.stop()
 		# Checking if the circulateur Thread is alive
 		if (ThreadCirculateur.is_alive()):
 			# check if the tempchaudiere is > temp chaudier basse, if yes then keep the circulateur on, else stop
 			while glob.tempChaudiereViessman > int(glob.consignesConfig['temp_chaudiere_basse'])+20:
-				logtext = "La chaudiere est chaude : " + str(glob.tempChaudiereViessman) + ", on attend :) " + glob.consignesConfig['sleep_chaudiere'] + " seconds"
+				logtext = "La chaudiere est encore chaude : " + str(glob.tempChaudiereViessman) + ", on en profite avant d arreter le circulateur :) " + glob.consignesConfig['sleep_chaudiere'] + " seconds"
 				log(self.name, self.verbose, self.severity, logtext)
 				time.sleep(int(glob.consignesConfig['sleep_chaudiere']))
 			# stop the circulateur
